@@ -32,7 +32,8 @@ def pvalue_pruning(tsintervals, potential_freqs, alpha=0.05):
 
 def gmm_fitting(tsintervals):
     bic = []
-    n_components_range = range(1, 4)
+    cntsamples = len(tsintervals)
+    n_components_range = range(1, min(4, cntsamples))
     X = tsintervals.reshape(-1,1)
     lowest_bic = np.infty
     for n_components in n_components_range:
@@ -55,10 +56,13 @@ def baywatch_method(signals):
     array: list of detected periods (empty if the method does not report specific detected periods)
     bool: True if the signal is periodic else False
     """
-        
     periods = []
     detected = False
-    
+
+    sigcnt = len(signals[signals>0])
+    if sigcnt < 3:
+        return periods, detected
+        
     freq, psd = compute_psd(signals)
     psd_threshold = baywatch_permute(signals)
     potential_pers = get_potential_periods(freq, psd, psd_threshold)
