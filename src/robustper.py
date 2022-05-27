@@ -6,7 +6,7 @@ import multiprocessing
 from .robustperiod import robust_period_full
 
 
-def robustper_method(signals):
+def robustper_method(x):
     """"
     wrap the unofficial implementation of RobustPeriod: Time-Frequency Mining for Robust Multiple Periodicities Detection
     https://github.com/ariaghora/robust-period
@@ -23,14 +23,19 @@ def robustper_method(signals):
     zeta = 1.345
     
     detected = False
-    pers = []
+    periods = []
     
-    pers = robust_period_full(signals, 'db10', num_wavelets, lmb, c, zeta)[0]
+    sigcnt = len(x[x>0])
     
-    if len(pers) > 0:
+    if sigcnt < 3:
+        return periods, detected
+    
+    periods = robust_period_full(x, 'db10', num_wavelets, lmb, c, zeta)[0]
+    
+    if len(periods) > 0:
         detected = True
     
-    return pers, detected
+    return periods, detected
     
 def robustper_wrap(df):
     """

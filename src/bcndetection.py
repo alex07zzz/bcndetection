@@ -54,6 +54,10 @@ def bcndetection_method(signals):
     periods = []
     detected = False
     
+    sigcnt = len(signals[signals>0])
+    if sigcnt < 3:
+        return periods, detected
+    
     # decompose
     signals = emd_compose(signals)
     freq, psd = compute_psd(signals)
@@ -98,53 +102,3 @@ def mltproc_bcndetection_wrap(df, maxproc = 16):
     resdf = pd.concat(res)
     return resdf
 
-
-"""
-def bcndetection_wrap(df, mute=True):
-    
-    ## filter ts_cnt > 2
-    df = df.loc[df['ts_cnt'] > 2]
-    
-    if not mute: 
-        print("total entries:", df.shape[0])
-        
-    if df.shape[0] == 0:
-        return df
-    
-    ### decompose
-    df["hht"], df["composed"] = zip(*df["tdf"].apply(emd_compose))
-    df = df.drop(columns=["tdf"])
-    df = df.rename(columns={"hht": "tdf"})
-
-    ## find periodicity hints
-    df['freq'], df['psd'] = zip(*df["tdf"].apply(compute_psd))
-    df['psd_threshold'] = df["tdf"].apply(bcn_permute)
-    df["potential_periods"] = df.apply(lambda x: get_potential_periods(x['freq'], x['psd'], x['psd_threshold']), axis=1)
-    
-    ### filter entries that do not have any potential periods
-    df = df.loc[df["potential_periods"].map(len) > 0 ]
-
-    if df.shape[0] == 0:
-        return df[["tdf", "ts_cnt"]]  
-    
-    ### filter periods that are high freq noise
-    df["ts_intervals"] = df['tdf'].apply(lambda x: get_ts_intervals(x))
-    df = df.loc[df["ts_intervals"].map(len) > 0]
-    df["min_tsinterval"] = df["ts_intervals"].apply(lambda x: get_min_tsinterval(x))
-    df["high_freq_pruned"] = df.apply(lambda x: high_freq_pruning(x['potential_periods'], x['min_tsinterval']), axis=1)
-    df = df.loc[df["high_freq_pruned"].map(len) > 0]
-    
-    if df.shape[0] == 0:
-        return df[["tdf", "ts_cnt"]]  
-    
-    df["psd_ratio"] = df.apply(lambda x: psd_ratio(x['psd'], x['psd_threshold']), axis=1)
-    
-    df['autocorr_peaks'] = df.apply(lambda x: get_autocorr_peaks(x['tdf']), axis=1)
-    df['periods'] = df.apply(lambda x: acf_filtered_periodicity(x['high_freq_pruned'], x['autocorr_peaks']), axis=1)
-
-    ### Filtered
-    df = df.loc[df["periods"].map(len)>0]
-    df["detected"] = True
-    
-    df = df[["tdf", "ts_cnt", "periods", "detected"]]
-    return df"""
